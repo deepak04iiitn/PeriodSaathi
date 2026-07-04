@@ -4,11 +4,14 @@ import { mainMenuKeyboard } from '../utils/keyboard.js';
 const OPTS = { parse_mode: 'HTML' };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// handleHelp — called by /help and /about command listeners in the router.
-// @param type  'help' | 'about'
+// handleHelp — called by /help, /about, and /how_to_use command listeners.
+// @param type  'help' | 'about' | 'howto'
 // ─────────────────────────────────────────────────────────────────────────────
 export const handleHelp = async (bot, chatId, type) => {
-  const text = type === 'about' ? msg.aboutText() : msg.helpText();
+  const text =
+    type === 'about' ? msg.aboutText() :
+    type === 'howto' ? msg.howToUseText() :
+    msg.helpText();
 
   await bot.sendMessage(chatId, text, {
     ...OPTS,

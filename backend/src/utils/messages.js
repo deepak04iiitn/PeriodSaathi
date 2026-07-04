@@ -183,13 +183,15 @@ export const deleteDataSuccess = () =>
 // ── Reminders ─────────────────────────────────────────────────────────────────
 
 export const reminder3Days = () =>
-  `🌸 Just a heads-up — your period is expected in about <b>3 days</b>. No rush, just wanted you to be prepared!`;
+  `🌸 Just a heads-up — your period is expected in about <b>3 days</b>. No rush, just wanted you to be prepared! ` +
+  `Maybe swing by the store this week and pick up a few pads, so future-you has one less thing to worry about. 🧡`;
 
 export const reminder1Day = () =>
-  `🌸 Your period is expected <b>tomorrow</b>. Take care of yourself! 💛`;
+  `🌸 Your period is expected <b>tomorrow</b>. Take care of yourself! 💛 ` +
+  `Tuck a pad into your bag tonight — just so tomorrow feels a little lighter, whatever it brings.`;
 
 export const reminderDayOf = () =>
-  `🌸 Today's your predicted period start date. If it begins, tap <b>📅 Log Period</b> so I can keep learning your cycle.`;
+  `🌸 Today's your predicted period start date. Be gentle with yourself today, and whenever you're ready, I'm here to log it with you. 💛`;
 
 export const reminderLate = () =>
   `🌸 Your period was predicted a few days ago — everything okay?\n\n` +
@@ -204,6 +206,7 @@ export const helpText = () =>
   `/history — View your past logged cycles\n` +
   `/settings — Edit preferences, toggle reminders, delete data\n\n` +
   `/start — Re-run setup\n` +
+  `/how_to_use — A full step-by-step guide\n` +
   `/help — Show this message\n` +
   `/about — About PeriodSaathi`;
 
@@ -213,6 +216,24 @@ export const aboutText = () =>
   `<b>What I store:</b> your Telegram ID, first name, and the dates you log.\n` +
   `<b>What I never do:</b> share your data, sell it, or use it for anything else.\n\n` +
   `You can delete all your data at any time via ⚙ Settings.`;
+
+export const howToUseText = () =>
+  `🌸 <b>Here's everything you can do with me</b> — no rush, take it step by step.\n\n` +
+  `<b>1. Get started</b>\n` +
+  `Send /start and tell me when your last period began. I'll also ask for your average cycle length — just a starting guess, I'll refine it over time.\n\n` +
+  `<b>2. Log your period</b>\n` +
+  `Send /log any time your period starts or ends. Just type a date, or say "today" — I'll always double-check with you before saving anything.\n\n` +
+  `<b>3. Check your cycle</b>\n` +
+  `Send /cycle to see what day of your cycle you're on, and when your next period is expected.\n\n` +
+  `<b>4. Look back</b>\n` +
+  `Send /history to see every past cycle — start date, end date, and how long it lasted.\n\n` +
+  `<b>5. Let me remind you</b>\n` +
+  `Without you lifting a finger, I'll message you 3 days before, 1 day before, and on the day your period is due — plus a gentle nudge if it's running a little late. You can turn any of these on or off.\n\n` +
+  `<b>6. Make me yours</b>\n` +
+  `Send /settings to fine-tune your average cycle or period length by hand, pause tracking anytime life gets in the way, or delete every bit of your data in one tap.\n\n` +
+  `<b>7. Your privacy</b>\n` +
+  `I only ever store your Telegram ID, first name, and the dates you log — nothing else, never shared. See /about for the full picture.\n\n` +
+  `That's really it. Whenever you're ready, /log is where it all begins. 💛`;
 
 // ── Fallback ──────────────────────────────────────────────────────────────────
 

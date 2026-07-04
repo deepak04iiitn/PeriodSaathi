@@ -123,6 +123,17 @@ bot.onText(/\/about/, safe(async (message) => {
   await handleHelp(bot, ctx.chatId, 'about');
 }));
 
+bot.onText(/\/how_to_use/, safe(async (message) => {
+  const { chatId, telegramId } = idsFrom(message);
+  if (isRateLimited(telegramId, chatId)) return;
+
+  console.log(`[BOT] /how_to_use from telegramId=${telegramId}`);
+  const ctx = await sessionGuard(message);
+  if (!ctx) return;
+
+  await handleHelp(bot, ctx.chatId, 'howto');
+}));
+
 bot.onText(/\/log/, safe(async (message) => {
   const { chatId, telegramId } = idsFrom(message);
   if (isRateLimited(telegramId, chatId)) return;

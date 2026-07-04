@@ -7,6 +7,7 @@ import './bot/router.js';
 // Cron job self-registers on import.
 import './jobs/dailyReminder.js';
 import { runDailyReminders } from './services/reminderService.js';
+import User from './models/User.js';
 
 // ── Startup env validation ─────────────────────────────────────────────────────
 // Fail fast with a clear message rather than a cryptic runtime crash.
@@ -46,6 +47,26 @@ if (USE_WEBHOOKS) {
   });
 }
 
+// ── Public: joined-women counter for the landing page ─────────────────────────
+// No auth needed — exposes only a count, never any user data. Cached briefly
+// so a burst of landing-page visitors doesn't hammer the DB.
+const JOINED_COUNT_CACHE_MS = 60_000;
+let joinedCountCache = { count: 0, fetchedAt: 0 };
+
+app.get('/api/stats/joined-count', async (_req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  try {
+    const isStale = Date.now() - joinedCountCache.fetchedAt > JOINED_COUNT_CACHE_MS;
+    if (isStale) {
+      const count = await User.countDocuments({ onboardingComplete: true });
+      joinedCountCache = { count, fetchedAt: Date.now() };
+    }
+    res.json({ count: joinedCountCache.count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Admin: manual reminder trigger ────────────────────────────────────────────
 if (ENABLE_ADMIN) {
   app.post('/admin/trigger-reminders', async (_req, res) => {
@@ -73,13 +94,14 @@ const start = async () => {
 
   // Register commands so they appear in Telegram's / autocomplete menu.
   await bot.setMyCommands([
-    { command: 'log',      description: 'Log your period start or end date'      },
-    { command: 'cycle',    description: 'See your current cycle day & prediction' },
-    { command: 'history',  description: 'View your past logged cycles'            },
-    { command: 'settings', description: 'Edit preferences, reminders & data'     },
-    { command: 'help',     description: 'Show all available commands'             },
-    { command: 'about',    description: 'About PeriodSaathi'                     },
-    { command: 'start',    description: 'Start or restart setup'                  },
+    { command: 'log',         description: 'Log your period start or end date'      },
+    { command: 'cycle',       description: 'See your current cycle day & prediction' },
+    { command: 'history',     description: 'View your past logged cycles'            },
+    { command: 'settings',    description: 'Edit preferences, reminders & data'     },
+    { command: 'how_to_use',  description: 'Full step-by-step guide to PeriodSaathi' },
+    { command: 'help',        description: 'Show all available commands'             },
+    { command: 'about',       description: 'About PeriodSaathi'                     },
+    { command: 'start',       description: 'Start or restart setup'                  },
   ]);
   console.log('[BOT] Commands registered.');
 
