@@ -27,7 +27,7 @@ export const askCycleLength = () =>
 export const onboardingComplete = (nextDate) =>
   `You're all set! 🎉\n\n` +
   `Based on what you've told me, your next period is predicted for <b>${format(nextDate)}</b>.\n\n` +
-  `I'll remind you before it arrives. Tap <b>📊 My Cycle</b> anytime to check your status.`;
+  `I'll remind you before it arrives. Type /help to see all commands to view or edit your cycle.`;
 
 // ── Log type choice ───────────────────────────────────────────────────────────
 
