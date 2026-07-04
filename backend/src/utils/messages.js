@@ -92,11 +92,11 @@ export const noCycleData = () =>
 
 export const historyHeader = () => `📜 *Your Cycle History*\n\n`;
 
-export const historyEntry = (index, log, prevLog) => {
+export const historyEntry = (index, log) => {
   const start = format(log.periodStartDate);
   const end   = log.periodEndDate ? format(log.periodEndDate) : '—';
   const periodLen = log.periodEndDate
-    ? `${Math.round((log.periodEndDate - log.periodStartDate) / 86400000)} days`
+    ? `${Math.round((new Date(log.periodEndDate) - new Date(log.periodStartDate)) / 86400000)} days`
     : '—';
   const cycleLen = log.cycleLength ? `${log.cycleLength} days` : '—';
 
