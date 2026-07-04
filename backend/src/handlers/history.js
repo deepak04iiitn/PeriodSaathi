@@ -8,7 +8,7 @@ import {
 } from '../utils/keyboard.js';
 import { format } from '../utils/dateHelpers.js';
 
-const OPTS       = { parse_mode: 'Markdown' };
+const OPTS       = { parse_mode: 'HTML' };
 const MAX_ENTRIES = 12;
 
 // ─────────────────────────────────────────────────────────────────────────────

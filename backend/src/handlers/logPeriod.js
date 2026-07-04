@@ -4,46 +4,36 @@ import parseDate from '../services/dateParser.js';
 import * as pred from '../services/predictionService.js';
 import * as msg from '../utils/messages.js';
 import {
+  CB,
+  logTypeKeyboard,
   confirmDateKeyboard,
   mainMenuKeyboard,
-  CB,
 } from '../utils/keyboard.js';
 import { format, isFuture, daysBetween } from '../utils/dateHelpers.js';
 
-const OPTS = { parse_mode: 'Markdown' };
+const OPTS = { parse_mode: 'HTML' };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // handleLogPeriod — entry points:
 //
-//   1. Text string (raw date input while pendingAction is set)
-//   2. callback_query object  — CONFIRM_DATE_YES / CONFIRM_DATE_NO
-//   3. null                   — user pressed the "📅 Log Period" reply button
+//   null                        → show start/end type-choice keyboard
+//   callback LOG_PERIOD_START   → set AWAITING_LOG_PERIOD_DATE,     ask for start date
+//   callback LOG_PERIOD_END     → set AWAITING_LOG_PERIOD_END_DATE, ask for end date
+//   text (AWAITING_LOG_PERIOD_DATE)        → parse start date → confirm
+//   text (AWAITING_LOG_PERIOD_END_DATE)    → parse end date   → confirm
+//   callback CONFIRM_DATE_YES/NO           → save or re-ask
 //
-// State flow:
-//   null / button press
-//     → set AWAITING_LOG_PERIOD_DATE (or AWAITING_FIRST_PERIOD_DATE for new users)
-//     → ask for date
-//
-//   AWAITING_FIRST_PERIOD_DATE | AWAITING_LOG_PERIOD_DATE  (text)
-//     → parse date → store in user.pendingDate
-//     → show confirmDateKeyboard
-//
-//   CONFIRM_DATE_YES  (callback)
-//     → save CycleLog
-//     → onboarding:  set AWAITING_ONBOARDING_CYCLE_LENGTH, ask cycle length
-//     → normal:      recalculate averages, show success + main menu
-//
-//   CONFIRM_DATE_NO  (callback)
-//     → re-ask for date (keep existing pendingAction)
+// Onboarding path (AWAITING_FIRST_PERIOD_DATE) bypasses the type choice
+// and uses the same text-parsing + confirmation loop, branching in saveStartLog.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const handleLogPeriod = async (bot, chatId, user, input) => {
-  // ── Entry: button press with no pending state ─────────────────────────────
+  // ── Entry: button press from main menu ────────────────────────────────────
   if (input === null || input === undefined) {
-    user.pendingAction = 'AWAITING_LOG_PERIOD_DATE';
+    user.pendingAction = null;
     user.pendingDate   = null;
     await user.save();
-    await bot.sendMessage(chatId, msg.askPeriodDate(), OPTS);
+    await bot.sendMessage(chatId, msg.askLogType(), { ...OPTS, ...logTypeKeyboard() });
     return;
   }
 
@@ -52,12 +42,58 @@ export const handleLogPeriod = async (bot, chatId, user, input) => {
     return handleCallback(bot, chatId, user, input);
   }
 
-  // ── Raw text — parse the date ─────────────────────────────────────────────
+  // ── Raw text — parse a date ───────────────────────────────────────────────
   return handleDateText(bot, chatId, user, input);
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Parse free-text date input and ask for confirmation.
+// Route inline keyboard callbacks.
+// ─────────────────────────────────────────────────────────────────────────────
+const handleCallback = async (bot, chatId, user, query) => {
+  const data = query.data;
+
+  // ── Type choice ───────────────────────────────────────────────────────────
+  if (data === CB.LOG_PERIOD_START) {
+    user.pendingAction = 'AWAITING_LOG_PERIOD_DATE';
+    user.pendingDate   = null;
+    await user.save();
+    await bot.sendMessage(chatId, msg.askPeriodDate(), OPTS);
+    return;
+  }
+
+  if (data === CB.LOG_PERIOD_END) {
+    user.pendingAction = 'AWAITING_LOG_PERIOD_END_DATE';
+    user.pendingDate   = null;
+    await user.save();
+    await bot.sendMessage(chatId, msg.askPeriodEndDate(), OPTS);
+    return;
+  }
+
+  // ── Date confirmation — re-ask ────────────────────────────────────────────
+  if (data === CB.CONFIRM_DATE_NO) {
+    user.pendingDate = null;
+    await user.save();
+
+    const isEnd = user.pendingAction === 'AWAITING_LOG_PERIOD_END_DATE';
+    await bot.sendMessage(
+      chatId,
+      isEnd ? msg.askPeriodEndDate() : msg.askPeriodDate(),
+      OPTS
+    );
+    return;
+  }
+
+  // ── Date confirmation — save ──────────────────────────────────────────────
+  if (data === CB.CONFIRM_DATE_YES) {
+    if (user.pendingAction === 'AWAITING_LOG_PERIOD_END_DATE') {
+      return saveEndDate(bot, chatId, user);
+    }
+    return saveStartLog(bot, chatId, user);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Parse free-text date and ask for confirmation.
 // ─────────────────────────────────────────────────────────────────────────────
 const handleDateText = async (bot, chatId, user, text) => {
   const parsed = parseDate(text);
@@ -72,59 +108,39 @@ const handleDateText = async (bot, chatId, user, text) => {
     return;
   }
 
-  // Store the parsed date on the user doc so it survives the callback round-trip.
   user.pendingDate = parsed;
   await user.save();
 
+  const isEnd = user.pendingAction === 'AWAITING_LOG_PERIOD_END_DATE';
   await bot.sendMessage(
     chatId,
-    msg.confirmDate(parsed),
+    msg.confirmDate(parsed, isEnd ? 'end' : 'start'),
     { ...OPTS, ...confirmDateKeyboard() }
   );
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Handle inline keyboard callbacks (YES / NO on date confirmation).
+// Persist a new CycleLog (period start date).
 // ─────────────────────────────────────────────────────────────────────────────
-const handleCallback = async (bot, chatId, user, query) => {
-  const data = query.data;
-
-  if (data === CB.CONFIRM_DATE_NO) {
-    // User wants to re-enter — keep the same pendingAction, re-ask.
-    user.pendingDate = null;
-    await user.save();
-    await bot.sendMessage(chatId, msg.askPeriodDate(), OPTS);
-    return;
-  }
-
-  if (data === CB.CONFIRM_DATE_YES) {
-    return saveLog(bot, chatId, user);
-  }
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Persist the confirmed CycleLog and branch on onboarding vs normal flow.
-// ─────────────────────────────────────────────────────────────────────────────
-const saveLog = async (bot, chatId, user) => {
+const saveStartLog = async (bot, chatId, user) => {
   const startDate = user.pendingDate;
 
   if (!startDate) {
-    // Edge case: pendingDate was lost (e.g., server restart between messages).
+    // pendingDate lost (e.g. server restart between messages) — re-ask.
     user.pendingAction = user.onboardingComplete
       ? 'AWAITING_LOG_PERIOD_DATE'
       : 'AWAITING_FIRST_PERIOD_DATE';
-    user.pendingDate = null;
     await user.save();
     await bot.sendMessage(chatId, msg.askPeriodDate(), OPTS);
     return;
   }
 
-  // ── Duplicate guard: warn if a log within ±2 days already exists ──────────
+  // ── Duplicate guard ───────────────────────────────────────────────────────
   if (user.onboardingComplete) {
     const windowStart = new Date(startDate);
     const windowEnd   = new Date(startDate);
     windowStart.setDate(windowStart.getDate() - 2);
-    windowEnd.setDate(windowEnd.getDate() + 2);
+    windowEnd.setDate(windowEnd.getDate()   + 2);
 
     const existing = await CycleLog.findOne({
       telegramId:      user.telegramId,
@@ -132,25 +148,20 @@ const saveLog = async (bot, chatId, user) => {
     }).lean();
 
     if (existing) {
-      await bot.sendMessage(
-        chatId,
-        msg.duplicateLogWarning(existing.periodStartDate),
-        OPTS
-      );
-      // Clear pending state so user returns to menu — don't save duplicate.
+      await bot.sendMessage(chatId, msg.duplicateLogWarning(existing.periodStartDate), OPTS);
       user.pendingAction = null;
       user.pendingDate   = null;
       await user.save();
       await bot.sendMessage(
         chatId,
-        'Returning to menu. Tap *📅 Log Period* if you want to try again.',
+        `Returning to menu. Tap <b>📅 Log Period</b> if you want to try again.`,
         { ...OPTS, ...mainMenuKeyboard() }
       );
       return;
     }
   }
 
-  // ── Create the CycleLog ───────────────────────────────────────────────────
+  // ── Create CycleLog ───────────────────────────────────────────────────────
   const prevLog = await CycleLog.findOne({ telegramId: user.telegramId })
     .sort({ periodStartDate: -1 })
     .lean();
@@ -159,73 +170,105 @@ const saveLog = async (bot, chatId, user) => {
     ? daysBetween(prevLog.periodStartDate, startDate)
     : null;
 
-  await CycleLog.create({
-    telegramId:      user.telegramId,
-    periodStartDate: startDate,
-    cycleLength,
-  });
+  await CycleLog.create({ telegramId: user.telegramId, periodStartDate: startDate, cycleLength });
 
   console.log(
-    `[LOG_PERIOD] Saved CycleLog for telegramId=${user.telegramId}, ` +
+    `[LOG_PERIOD] Start saved for telegramId=${user.telegramId}, ` +
     `startDate=${format(startDate)}, cycleLength=${cycleLength}`
   );
 
-  // ── Clear pending state ───────────────────────────────────────────────────
   user.pendingDate = null;
 
-  // ── Branch: onboarding vs normal ─────────────────────────────────────────
+  // ── Onboarding path ───────────────────────────────────────────────────────
   if (!user.onboardingComplete) {
-    // Onboarding path — now ask for cycle length.
     user.pendingAction = 'AWAITING_ONBOARDING_CYCLE_LENGTH';
     await user.save();
     await bot.sendMessage(chatId, msg.askCycleLength(), OPTS);
     return;
   }
 
-  // Normal path — recalculate averages and show success.
+  // ── Normal path ───────────────────────────────────────────────────────────
   user.pendingAction = null;
   await user.save();
 
   await pred.recalculateAverages(user);
 
-  // Re-fetch user to get the freshly recalculated avgCycleLength.
-  const freshUser = await User.findOne({ telegramId: user.telegramId }).lean();
+  const freshUser  = await User.findOne({ telegramId: user.telegramId }).lean();
+  const latestLog  = await CycleLog.findOne({ telegramId: user.telegramId })
+    .sort({ periodStartDate: -1 }).lean();
+  const nextDate   = pred.getNextPeriodDate(freshUser, latestLog);
 
-  const latestLog = await CycleLog.findOne({ telegramId: user.telegramId })
-    .sort({ periodStartDate: -1 })
-    .lean();
-
-  const nextDate = pred.getNextPeriodDate(freshUser, latestLog);
-
-  await bot.sendMessage(
-    chatId,
-    msg.logSuccess(startDate, nextDate),
-    { ...OPTS, ...mainMenuKeyboard() }
-  );
+  await bot.sendMessage(chatId, msg.logSuccess(startDate, nextDate), { ...OPTS, ...mainMenuKeyboard() });
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// deleteLog — removes a single CycleLog entry owned by the given telegramId
-// and triggers average recalculation. Called by handleHistory in Phase 7.
-//
-// Returns true on success, false if the log was not found or not owned by user.
+// Update the most recent CycleLog with a period end date.
+// ─────────────────────────────────────────────────────────────────────────────
+const saveEndDate = async (bot, chatId, user) => {
+  const endDate = user.pendingDate;
+
+  if (!endDate) {
+    user.pendingAction = 'AWAITING_LOG_PERIOD_END_DATE';
+    await user.save();
+    await bot.sendMessage(chatId, msg.askPeriodEndDate(), OPTS);
+    return;
+  }
+
+  // Find the most recent log that has no end date yet.
+  const openLog = await CycleLog.findOne({
+    telegramId:    user.telegramId,
+    periodEndDate: { $exists: false },
+  }).sort({ periodStartDate: -1 });
+
+  if (!openLog) {
+    user.pendingAction = null;
+    user.pendingDate   = null;
+    await user.save();
+    await bot.sendMessage(chatId, msg.noOpenLog(), { ...OPTS, ...mainMenuKeyboard() });
+    return;
+  }
+
+  // End date must be after start date.
+  if (new Date(endDate) <= new Date(openLog.periodStartDate)) {
+    user.pendingDate = null;
+    await user.save();
+    await bot.sendMessage(chatId, msg.endBeforeStart(openLog.periodStartDate), OPTS);
+    // Re-ask for the end date.
+    user.pendingAction = 'AWAITING_LOG_PERIOD_END_DATE';
+    await user.save();
+    await bot.sendMessage(chatId, msg.askPeriodEndDate(), OPTS);
+    return;
+  }
+
+  openLog.periodEndDate = endDate;
+  await openLog.save();
+
+  const periodDays = daysBetween(openLog.periodStartDate, endDate);
+
+  console.log(
+    `[LOG_PERIOD] End saved for telegramId=${user.telegramId}, ` +
+    `endDate=${format(endDate)}, periodDays=${periodDays}`
+  );
+
+  user.pendingAction = null;
+  user.pendingDate   = null;
+  await user.save();
+
+  await pred.recalculateAverages(user);
+
+  await bot.sendMessage(chatId, msg.logEndSuccess(endDate, periodDays), { ...OPTS, ...mainMenuKeyboard() });
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// deleteLog — removes a CycleLog entry and triggers average recalculation.
+// Called by handleHistory.
 // ─────────────────────────────────────────────────────────────────────────────
 export const deleteLog = async (logId, user) => {
-  const log = await CycleLog.findOne({
-    _id:        logId,
-    telegramId: user.telegramId,
-  });
-
+  const log = await CycleLog.findOne({ _id: logId, telegramId: user.telegramId });
   if (!log) return false;
 
   await log.deleteOne();
-
-  console.log(
-    `[LOG_PERIOD] Deleted CycleLog ${logId} for telegramId=${user.telegramId}`
-  );
-
-  // Recalculate averages with the entry removed.
+  console.log(`[LOG_PERIOD] Deleted CycleLog ${logId} for telegramId=${user.telegramId}`);
   await pred.recalculateAverages(user);
-
   return true;
 };

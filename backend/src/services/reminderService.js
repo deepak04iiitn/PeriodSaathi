@@ -6,7 +6,7 @@ import { getNextPeriodDate } from './predictionService.js';
 import { daysBetween } from '../utils/dateHelpers.js';
 
 const BATCH_SIZE = 100;
-const OPTS       = { parse_mode: 'Markdown' };
+const OPTS       = { parse_mode: 'HTML' };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // runDailyReminders

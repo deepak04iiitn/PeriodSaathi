@@ -1,7 +1,7 @@
 import * as msg from '../utils/messages.js';
 import { mainMenuKeyboard } from '../utils/keyboard.js';
 
-const OPTS = { parse_mode: 'Markdown' };
+const OPTS = { parse_mode: 'HTML' };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // handleHelp — called by /help and /about command listeners in the router.

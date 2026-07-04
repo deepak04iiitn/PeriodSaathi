@@ -31,7 +31,7 @@ const safe = (fn) => async (...args) => {
 
     if (chatId) {
       await bot
-        .sendMessage(chatId, msg.genericError(), { parse_mode: 'Markdown' })
+        .sendMessage(chatId, msg.genericError(), { parse_mode: 'HTML' })
         .catch(() => {}); // swallow if this also fails
     }
   }
@@ -68,7 +68,7 @@ const isRateLimited = (telegramId, chatId) => {
       .sendMessage(
         chatId,
         '🌸 You\'re sending messages very quickly — please slow down a little!',
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'HTML' }
       )
       .catch(() => {});
     return true;
@@ -123,6 +123,50 @@ bot.onText(/\/about/, safe(async (message) => {
   await handleHelp(bot, ctx.chatId, 'about');
 }));
 
+bot.onText(/\/log/, safe(async (message) => {
+  const { chatId, telegramId } = idsFrom(message);
+  if (isRateLimited(telegramId, chatId)) return;
+
+  console.log(`[BOT] /log from telegramId=${telegramId}`);
+  const ctx = await sessionGuard(message);
+  if (!ctx) return;
+
+  await handleLogPeriod(bot, ctx.chatId, ctx.user, null);
+}));
+
+bot.onText(/\/cycle/, safe(async (message) => {
+  const { chatId, telegramId } = idsFrom(message);
+  if (isRateLimited(telegramId, chatId)) return;
+
+  console.log(`[BOT] /cycle from telegramId=${telegramId}`);
+  const ctx = await sessionGuard(message);
+  if (!ctx) return;
+
+  await handleMyCycle(bot, ctx.chatId, ctx.user);
+}));
+
+bot.onText(/\/history/, safe(async (message) => {
+  const { chatId, telegramId } = idsFrom(message);
+  if (isRateLimited(telegramId, chatId)) return;
+
+  console.log(`[BOT] /history from telegramId=${telegramId}`);
+  const ctx = await sessionGuard(message);
+  if (!ctx) return;
+
+  await handleHistory(bot, ctx.chatId, ctx.user);
+}));
+
+bot.onText(/\/settings/, safe(async (message) => {
+  const { chatId, telegramId } = idsFrom(message);
+  if (isRateLimited(telegramId, chatId)) return;
+
+  console.log(`[BOT] /settings from telegramId=${telegramId}`);
+  const ctx = await sessionGuard(message);
+  if (!ctx) return;
+
+  await handleSettings(bot, ctx.chatId, ctx.user, null);
+}));
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Free-text messages (dates, cycle length answers, button text)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -140,31 +184,13 @@ bot.on('message', safe(async (message) => {
   const { user, chatId: cid } = ctx;
   const text = message.text.trim();
 
-  // ── Reply-keyboard button presses ────────────────────────────────────────
-  if (text === '📅 Log Period') {
-    console.log(`[BOT] 📅 Log Period from telegramId=${user.telegramId}`);
-    return handleLogPeriod(bot, cid, user, null);
-  }
-  if (text === '📊 My Cycle') {
-    console.log(`[BOT] 📊 My Cycle from telegramId=${user.telegramId}`);
-    return handleMyCycle(bot, cid, user);
-  }
-  if (text === '📜 History') {
-    console.log(`[BOT] 📜 History from telegramId=${user.telegramId}`);
-    return handleHistory(bot, cid, user);
-  }
-  if (text === '⚙ Settings') {
-    console.log(`[BOT] ⚙ Settings from telegramId=${user.telegramId}`);
-    return handleSettings(bot, cid, user, null);
-  }
-
   // ── Mid-flow state routing ────────────────────────────────────────────────
   if (user.pendingAction) {
     return routePendingAction(bot, cid, user, text);
   }
 
   // ── Unrecognised input ────────────────────────────────────────────────────
-  await bot.sendMessage(cid, msg.fallback(), { parse_mode: 'Markdown' });
+  await bot.sendMessage(cid, msg.fallback(), { parse_mode: 'HTML' });
 }));
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -194,6 +220,11 @@ bot.on('callback_query', safe(async (query) => {
     return handleLogPeriod(bot, cid, user, query);
   }
 
+  // ── Log type choice (start vs end) ────────────────────────────────────────
+  if (data === CB.LOG_PERIOD_START || data === CB.LOG_PERIOD_END) {
+    return handleLogPeriod(bot, cid, user, query);
+  }
+
   // ── Settings callbacks ────────────────────────────────────────────────────
   if (data.startsWith('SETTINGS_')) {
     return handleSettings(bot, cid, user, query);
@@ -219,7 +250,8 @@ const routePendingAction = async (bot, chatId, user, text) => {
 
   if (
     action === 'AWAITING_FIRST_PERIOD_DATE' ||
-    action === 'AWAITING_LOG_PERIOD_DATE'
+    action === 'AWAITING_LOG_PERIOD_DATE'   ||
+    action === 'AWAITING_LOG_PERIOD_END_DATE'
   ) {
     return handleLogPeriod(bot, chatId, user, text);
   }
@@ -242,7 +274,7 @@ const routePendingAction = async (bot, chatId, user, text) => {
   // Unknown pending action — clear it and show fallback.
   user.pendingAction = null;
   await user.save();
-  await bot.sendMessage(chatId, msg.fallback(), { parse_mode: 'Markdown' });
+  await bot.sendMessage(chatId, msg.fallback(), { parse_mode: 'HTML' });
 };
 
 console.log('[ROUTER] Bot router registered.');

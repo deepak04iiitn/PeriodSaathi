@@ -8,7 +8,7 @@ import * as msg from '../utils/messages.js';
 import { mainMenuKeyboard } from '../utils/keyboard.js';
 import { daysBetween } from '../utils/dateHelpers.js';
 
-const OPTS = { parse_mode: 'Markdown' };
+const OPTS = { parse_mode: 'HTML' };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // handleMyCycle

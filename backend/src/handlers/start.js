@@ -14,7 +14,7 @@ import { addDays, format } from '../utils/dateHelpers.js';
 // decide what to do after saving the first CycleLog.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const OPTS = { parse_mode: 'Markdown' };
+const OPTS = { parse_mode: 'HTML' };
 
 /**
  * Entry point called by the router on /start, and also by the pending-action

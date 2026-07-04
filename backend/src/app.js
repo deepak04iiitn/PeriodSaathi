@@ -71,6 +71,18 @@ const start = async () => {
     console.log('[BOT] Polling started.');
   }
 
+  // Register commands so they appear in Telegram's / autocomplete menu.
+  await bot.setMyCommands([
+    { command: 'log',      description: 'Log your period start or end date'      },
+    { command: 'cycle',    description: 'See your current cycle day & prediction' },
+    { command: 'history',  description: 'View your past logged cycles'            },
+    { command: 'settings', description: 'Edit preferences, reminders & data'     },
+    { command: 'help',     description: 'Show all available commands'             },
+    { command: 'about',    description: 'About PeriodSaathi'                     },
+    { command: 'start',    description: 'Start or restart setup'                  },
+  ]);
+  console.log('[BOT] Commands registered.');
+
   app.listen(PORT, () => {
     console.log(
       `[APP] Server on port ${PORT} — mode: ${USE_WEBHOOKS ? 'webhook' : 'polling'}` +

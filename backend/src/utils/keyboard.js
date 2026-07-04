@@ -8,6 +8,10 @@ export const CB = {
   HISTORY:               'HISTORY',
   SETTINGS:              'SETTINGS',
 
+  // Log type choice (start vs end)
+  LOG_PERIOD_START:      'LOG_PERIOD_START',
+  LOG_PERIOD_END:        'LOG_PERIOD_END',
+
   // Date confirmation
   CONFIRM_DATE_YES:      'CONFIRM_DATE_YES',
   CONFIRM_DATE_NO:       'CONFIRM_DATE_NO',
@@ -34,16 +38,31 @@ export const CB = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main menu — persistent reply keyboard shown after onboarding is complete.
+// Buttons use /command format so Telegram renders them as tappable commands.
 // ─────────────────────────────────────────────────────────────────────────────
 export const mainMenuKeyboard = () => ({
   reply_markup: {
     keyboard: [
-      [{ text: '📅 Log Period' }, { text: '📊 My Cycle' }],
-      [{ text: '📜 History'   }, { text: '⚙ Settings'  }],
+      [{ text: '/log' },      { text: '/cycle'    }],
+      [{ text: '/history' },  { text: '/settings' }],
     ],
     resize_keyboard:   true,
     one_time_keyboard: false,
     persistent:        true,
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Log type choice — shown when user taps 📅 Log Period from the main menu.
+// ─────────────────────────────────────────────────────────────────────────────
+export const logTypeKeyboard = () => ({
+  reply_markup: {
+    inline_keyboard: [
+      [
+        { text: '📅 Period Started', callback_data: CB.LOG_PERIOD_START },
+        { text: '🏁 Period Ended',   callback_data: CB.LOG_PERIOD_END   },
+      ],
+    ],
   },
 });
 

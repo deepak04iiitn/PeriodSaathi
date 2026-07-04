@@ -18,7 +18,7 @@ export const withErrorHandling = (fn) => async (bot, chatId, ...rest) => {
     console.error(`[HANDLER] Unhandled error in ${fn.name || 'anonymous'}:`, err);
 
     try {
-      await bot.sendMessage(chatId, msg.genericError(), { parse_mode: 'Markdown' });
+      await bot.sendMessage(chatId, msg.genericError(), { parse_mode: 'HTML' });
     } catch (sendErr) {
       console.error('[HANDLER] Failed to send error reply:', sendErr.message);
     }

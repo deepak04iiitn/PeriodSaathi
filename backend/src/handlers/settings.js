@@ -8,7 +8,7 @@ import {
   mainMenuKeyboard,
 } from '../utils/keyboard.js';
 
-const OPTS = { parse_mode: 'Markdown' };
+const OPTS = { parse_mode: 'HTML' };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // handleSettings — entry points:
@@ -169,7 +169,7 @@ const deleteAllData = async (bot, chatId, user) => {
 
   // Send farewell — no keyboard attached since the user no longer exists.
   await bot.sendMessage(chatId, msg.deleteDataSuccess(), {
-    parse_mode: 'Markdown',
+    parse_mode: 'HTML',
     reply_markup: { remove_keyboard: true },
   });
 };
