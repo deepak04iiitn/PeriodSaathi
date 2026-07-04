@@ -51,6 +51,13 @@ npm run dev
 | Frontend language | TypeScript |
 | Animations | Framer Motion |
 
+## Bot Mode
+
+| `WEBHOOK_URL` env var | Mode |
+|---|---|
+| _(empty)_ | Polling — no public URL needed |
+| `https://yourdomain.com` | Webhooks |
+
 ## Privacy
 
 PeriodSaathi stores only what is strictly necessary: your Telegram ID, first name, and the dates you log. No data is shared with third parties. Users can delete everything at any time via ⚙ Settings in the bot.

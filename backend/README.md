@@ -26,15 +26,15 @@ npm run dev
 | `TELEGRAM_BOT_TOKEN` | Token from [@BotFather](https://t.me/BotFather) |
 | `MONGODB_URI` | MongoDB connection string |
 | `PORT` | Express server port (default `3000`) |
-| `NODE_ENV` | `development` (polling) or `production` (webhooks) |
-| `WEBHOOK_URL` | Public HTTPS URL — production only |
+| `WEBHOOK_URL` | Leave empty for polling. Set to your public HTTPS URL to enable webhooks. |
+| `ENABLE_ADMIN_ROUTES` | Set `true` to expose `POST /admin/trigger-reminders` for manual job testing. |
 
-## Development vs Production
+## Polling vs Webhook Mode
 
-| Mode | Transport | Notes |
+| `WEBHOOK_URL` | Mode | Notes |
 |---|---|---|
-| `development` | Polling | No public URL needed |
-| `production` | Webhooks | Requires `WEBHOOK_URL` set |
+| _(empty)_ | Polling | No public URL needed — use for local dev |
+| `https://...` | Webhooks | Bot receives updates via HTTP push |
 
 ## Project Structure
 
