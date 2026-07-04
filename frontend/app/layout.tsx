@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL ?? "https://t.me/periodsaathi_bot";
@@ -45,6 +46,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-full flex flex-col bg-ivory text-plum antialiased font-sans">
         {children}
+        <Script
+          src="https://analytics.ahrefs.com/analytics.js"
+          data-key="AuXwRgz1dUYJ8MvtuYl4eg"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
