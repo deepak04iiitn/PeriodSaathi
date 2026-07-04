@@ -14,7 +14,8 @@ export const welcome = (firstName) =>
   `<b>What I store:</b> your Telegram ID, first name, and the dates you log.\n` +
   `<b>What I never do:</b> share your data, sell it, or use it for anything else.\n\n` +
   `Let's get started — <b>when did your last period start?</b>\n` +
-  `<i>(You can type a date like <b>3 July</b>, say <b>today</b>, or <b>yesterday</b>)</i>`;
+  `<i>(You can type a date like <b>3 July</b>, say <b>today</b>, or <b>yesterday</b>)</i>\n\n` +
+  `<i>Tip: type /help anytime to see all available commands.</i>`;
 
 export const welcomeBack = (firstName) =>
   `🌸 Welcome back, <b>${firstName}</b>! What would you like to do today?`;
