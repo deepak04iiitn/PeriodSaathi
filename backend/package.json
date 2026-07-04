@@ -1,0 +1,31 @@
+{
+  "name": "periodsaathi",
+  "version": "1.0.0",
+  "description": "Your private period reminder and cycle companion — a Telegram bot.",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "telegram-bot",
+    "period-tracker",
+    "cycle-tracking"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "chrono-node": "^2.9.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.7.3",
+    "node-cron": "^4.5.0",
+    "node-telegram-bot-api": "^1.1.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

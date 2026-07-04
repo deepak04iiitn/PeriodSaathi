@@ -1,0 +1,28 @@
+# Dependencies (both workspaces)
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Environment variables — never commit the real .env
+.env
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Logs
+*.log
+logs/
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Next.js build output
+.next/
+out/
