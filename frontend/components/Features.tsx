@@ -1,79 +1,81 @@
+import { Lock, Brain, CalendarRange, Bell, SlidersHorizontal, History } from "lucide-react";
+
 const features = [
   {
-    icon: "🔒",
+    Icon: Lock,
     title: "Completely private",
     description:
-      "Lives in your Telegram DMs — no app, no public profile, no visible icon on your home screen.",
+      "Lives in your Telegram DMs — no app, no public profile, no visible icon on your home screen. No email or password either.",
+    big: true,
   },
   {
-    icon: "🧠",
+    Icon: Brain,
     title: "Learns your cycle",
     description:
-      "Predictions improve with every log, using your real cycle history — not a fixed 28-day guess.",
+      "Predictions improve with every log, using a rolling average of your real cycles — not a fixed 28-day guess.",
   },
   {
-    icon: "🔔",
+    Icon: CalendarRange,
+    title: "Start to finish",
+    description:
+      "Log when your period begins and when it ends, so we learn your average length too — not just your cycle.",
+  },
+  {
+    Icon: Bell,
     title: "Smart reminders",
     description:
-      "Get a heads-up 3 days before, 1 day before, and on the day — fully customisable from the bot.",
+      "A heads-up 3 days before, 1 day before, and on the day — each one you can turn on or off.",
   },
   {
-    icon: "📜",
-    title: "Cycle history",
-    description:
-      "See all your past cycles at a glance. No chart needed — just a clean, simple list.",
-  },
-  {
-    icon: "⚙️",
+    Icon: SlidersHorizontal,
     title: "Full control",
-    description:
-      "Pause tracking anytime. Delete all your data in seconds. You are always in charge.",
+    description: "Pause tracking anytime, fine-tune your averages by hand, or delete everything in seconds.",
   },
   {
-    icon: "💛",
-    title: "Zero friction",
-    description:
-      "No email, no password, no download. If you have Telegram, you are ready to start.",
+    Icon: History,
+    title: "Cycle history",
+    description: "Every past cycle in one clean list — start date, end date, and how long it lasted.",
   },
 ];
 
 export default function Features() {
   return (
-    <section id="features" className="py-24 bg-petal">
+    <section id="features" className="py-24 sm:py-28 bg-ivory-deep">
       <div className="max-w-5xl mx-auto px-5 sm:px-8">
         {/* header */}
-        <div className="text-center mb-14">
-          <p className="text-blush font-semibold text-sm uppercase tracking-widest mb-3">
+        <div className="max-w-xl mb-14">
+          <p className="text-clay-dark font-medium text-sm tracking-wide mb-3">
             Everything you need
           </p>
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-bark">
-            Built around your comfort
+          <h2 className="font-serif text-3xl sm:text-4xl text-plum">
+            Built to stay out of your way
           </h2>
-          <p className="mt-4 text-bark/65 max-w-xl mx-auto text-sm leading-relaxed">
-            PeriodSaathi is designed to stay out of the way — showing up only when you need
-            it, completely on your terms.
+          <p className="mt-4 text-plum/65 text-sm leading-relaxed">
+            PeriodSaathi shows up only when you need it, and disappears the rest of
+            the time — completely on your terms.
           </p>
         </div>
 
-        {/* grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* bento grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((f) => (
             <div
               key={f.title}
-              className="
-                group bg-feather rounded-2xl p-6
-                border border-rose-warm/40
-                hover:border-blush/40 hover:shadow-md hover:-translate-y-0.5
-                transition-all duration-200
-              "
+              className={`
+                bg-paper rounded-2xl p-7
+                border border-wine/10
+                hover:border-wine/25
+                transition-colors duration-200
+                ${f.big ? "lg:col-span-2" : ""}
+              `}
             >
-              <div className="text-3xl mb-4" aria-hidden="true">
-                {f.icon}
+              <div className="w-11 h-11 rounded-xl bg-clay-soft flex items-center justify-center mb-5">
+                <f.Icon className="w-5 h-5 text-clay-dark" strokeWidth={2} aria-hidden="true" />
               </div>
-              <h3 className="font-serif text-base font-bold text-bark mb-2">
-                {f.title}
-              </h3>
-              <p className="text-bark/60 text-sm leading-relaxed">{f.description}</p>
+              <h3 className="font-serif text-lg text-plum mb-2">{f.title}</h3>
+              <p className="text-plum/60 text-sm leading-relaxed max-w-md">
+                {f.description}
+              </p>
             </div>
           ))}
         </div>
