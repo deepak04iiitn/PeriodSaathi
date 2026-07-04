@@ -8,6 +8,16 @@ import './bot/router.js';
 import './jobs/dailyReminder.js';
 import { runDailyReminders } from './services/reminderService.js';
 
+// ── Startup env validation ─────────────────────────────────────────────────────
+// Fail fast with a clear message rather than a cryptic runtime crash.
+const REQUIRED_ENV = ['TELEGRAM_BOT_TOKEN', 'MONGODB_URI'];
+const missing = REQUIRED_ENV.filter((key) => !process.env[key]?.trim());
+if (missing.length) {
+  console.error(`[APP] Missing required environment variables: ${missing.join(', ')}`);
+  console.error('[APP] Copy .env.example to .env and fill in all values.');
+  process.exit(1);
+}
+
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
@@ -54,7 +64,7 @@ const start = async () => {
   await connectDB();
 
   if (USE_WEBHOOKS) {
-    await bot.setWebHook(`${WEBHOOK_URL}/webhook/${process.env.TELEGRAM_BOT_TOKEN}`);
+    await bot.setWebhook(`${WEBHOOK_URL}/webhook/${process.env.TELEGRAM_BOT_TOKEN}`);
     console.log('[BOT] Webhook registered at', WEBHOOK_URL);
   } else {
     bot.startPolling();

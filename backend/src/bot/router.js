@@ -42,17 +42,28 @@ const safe = (fn) => async (...args) => {
 // Drops messages beyond 20/min with a polite reply.
 // ─────────────────────────────────────────────────────────────────────────────
 const rateLimitMap = new Map(); // telegramId → [timestamp, ...]
+const RATE_LIMIT   = 20;
+const RATE_WINDOW  = 60_000; // 1 minute in ms
+
+// Prune stale entries every 10 minutes to prevent unbounded Map growth.
+// unref() so this timer doesn't block graceful process shutdown.
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, timestamps] of rateLimitMap) {
+    const fresh = timestamps.filter((t) => now - t < RATE_WINDOW);
+    if (fresh.length === 0) rateLimitMap.delete(id);
+    else rateLimitMap.set(id, fresh);
+  }
+}, 10 * 60 * 1000).unref();
 
 const isRateLimited = (telegramId, chatId) => {
-  const now   = Date.now();
-  const limit = 20;
-  const window = 60_000;
+  const now = Date.now();
 
   const timestamps = (rateLimitMap.get(telegramId) ?? []).filter(
-    (t) => now - t < window
+    (t) => now - t < RATE_WINDOW
   );
 
-  if (timestamps.length >= limit) {
+  if (timestamps.length >= RATE_LIMIT) {
     bot
       .sendMessage(
         chatId,
@@ -83,6 +94,7 @@ bot.onText(/\/start/, safe(async (message) => {
   const { chatId, telegramId } = idsFrom(message);
   if (isRateLimited(telegramId, chatId)) return;
 
+  console.log(`[BOT] /start from telegramId=${telegramId}`);
   const ctx = await sessionGuard(message);
   if (!ctx) return;
 
@@ -93,6 +105,7 @@ bot.onText(/\/help/, safe(async (message) => {
   const { chatId, telegramId } = idsFrom(message);
   if (isRateLimited(telegramId, chatId)) return;
 
+  console.log(`[BOT] /help from telegramId=${telegramId}`);
   const ctx = await sessionGuard(message);
   if (!ctx) return;
 
@@ -103,6 +116,7 @@ bot.onText(/\/about/, safe(async (message) => {
   const { chatId, telegramId } = idsFrom(message);
   if (isRateLimited(telegramId, chatId)) return;
 
+  console.log(`[BOT] /about from telegramId=${telegramId}`);
   const ctx = await sessionGuard(message);
   if (!ctx) return;
 
@@ -128,15 +142,19 @@ bot.on('message', safe(async (message) => {
 
   // ── Reply-keyboard button presses ────────────────────────────────────────
   if (text === '📅 Log Period') {
+    console.log(`[BOT] 📅 Log Period from telegramId=${user.telegramId}`);
     return handleLogPeriod(bot, cid, user, null);
   }
   if (text === '📊 My Cycle') {
+    console.log(`[BOT] 📊 My Cycle from telegramId=${user.telegramId}`);
     return handleMyCycle(bot, cid, user);
   }
   if (text === '📜 History') {
+    console.log(`[BOT] 📜 History from telegramId=${user.telegramId}`);
     return handleHistory(bot, cid, user);
   }
   if (text === '⚙ Settings') {
+    console.log(`[BOT] ⚙ Settings from telegramId=${user.telegramId}`);
     return handleSettings(bot, cid, user, null);
   }
 
