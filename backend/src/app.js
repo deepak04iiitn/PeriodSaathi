@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import connectDB from './config/db.js';
 import bot from './bot/index.js';
+// Router self-registers all message/callback listeners on the bot instance.
+import './bot/router.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
