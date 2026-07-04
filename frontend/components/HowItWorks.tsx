@@ -59,12 +59,8 @@ export default function HowItWorks() {
               transition={{ duration: 0.6, ease: EASE, delay: 0.12 + i * 0.1 }}
               className="flex flex-col items-center text-center px-6 py-8 sm:py-0"
             >
-              <span className="font-serif text-5xl text-wine-soft leading-none select-none">
-                {step.number}
-              </span>
-
-              <div className="w-10 h-10 rounded-lg bg-clay-soft flex items-center justify-center -mt-5 mb-5">
-                <step.Icon className="w-5 h-5 text-clay-dark" strokeWidth={2} aria-hidden="true" />
+              <div className="w-12 h-12 rounded-lg bg-clay-soft flex items-center justify-center mb-5">
+                <step.Icon className="w-6 h-6 text-clay-dark" strokeWidth={2} aria-hidden="true" />
               </div>
 
               <h3 className="font-serif text-lg text-plum mb-2">{step.heading}</h3>
