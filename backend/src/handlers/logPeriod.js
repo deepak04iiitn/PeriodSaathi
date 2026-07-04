@@ -1,4 +1,5 @@
 import CycleLog from '../models/CycleLog.js';
+import User from '../models/User.js';
 import parseDate from '../services/dateParser.js';
 import * as pred from '../services/predictionService.js';
 import * as msg from '../utils/messages.js';
@@ -7,7 +8,7 @@ import {
   mainMenuKeyboard,
   CB,
 } from '../utils/keyboard.js';
-import { format, isFuture, daysBetween, today } from '../utils/dateHelpers.js';
+import { format, isFuture, daysBetween } from '../utils/dateHelpers.js';
 
 const OPTS = { parse_mode: 'Markdown' };
 
@@ -187,19 +188,44 @@ const saveLog = async (bot, chatId, user) => {
 
   await pred.recalculateAverages(user);
 
-  // Reload user after recalculation to get fresh avgCycleLength.
-  await user.reload();
+  // Re-fetch user to get the freshly recalculated avgCycleLength.
+  const freshUser = await User.findOne({ telegramId: user.telegramId }).lean();
 
-  const { default: CycleLogModel } = await import('../models/CycleLog.js');
-  const latestLog = await CycleLogModel.findOne({ telegramId: user.telegramId })
+  const latestLog = await CycleLog.findOne({ telegramId: user.telegramId })
     .sort({ periodStartDate: -1 })
     .lean();
 
-  const nextDate = pred.getNextPeriodDate(user, latestLog);
+  const nextDate = pred.getNextPeriodDate(freshUser, latestLog);
 
   await bot.sendMessage(
     chatId,
     msg.logSuccess(startDate, nextDate),
     { ...OPTS, ...mainMenuKeyboard() }
   );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// deleteLog — removes a single CycleLog entry owned by the given telegramId
+// and triggers average recalculation. Called by handleHistory in Phase 7.
+//
+// Returns true on success, false if the log was not found or not owned by user.
+// ─────────────────────────────────────────────────────────────────────────────
+export const deleteLog = async (logId, user) => {
+  const log = await CycleLog.findOne({
+    _id:        logId,
+    telegramId: user.telegramId,
+  });
+
+  if (!log) return false;
+
+  await log.deleteOne();
+
+  console.log(
+    `[LOG_PERIOD] Deleted CycleLog ${logId} for telegramId=${user.telegramId}`
+  );
+
+  // Recalculate averages with the entry removed.
+  await pred.recalculateAverages(user);
+
+  return true;
 };
