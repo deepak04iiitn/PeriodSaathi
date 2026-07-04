@@ -60,7 +60,7 @@ export const logSuccess = (startDate, nextDate) =>
 
 // ── My Cycle overview ─────────────────────────────────────────────────────────
 
-export const cycleOverview = ({ lastStart, cycleDay, nextDate, daysUntil, avgCycleLength }) => {
+export const cycleOverview = ({ lastStart, cycleDay, nextDate, daysUntil, avgCycleLength, fertileWindow = null }) => {
   const daysLabel =
     daysUntil > 0
       ? `in ${daysUntil} day${daysUntil === 1 ? '' : 's'}`
@@ -68,13 +68,19 @@ export const cycleOverview = ({ lastStart, cycleDay, nextDate, daysUntil, avgCyc
       ? 'today'
       : `${Math.abs(daysUntil)} day${Math.abs(daysUntil) === 1 ? '' : 's'} ago (may be running late)`;
 
+  const fertileWindowLine = fertileWindow
+    ? `\n🌿 Fertile window _(est.)_: *${format(fertileWindow.start)} – ${format(fertileWindow.end)}*\n` +
+      `_Not medical advice — ovulation timing varies._`
+    : '';
+
   return (
     `📊 *Your Cycle Overview*\n\n` +
     `📅 Last period: *${format(lastStart)}*\n` +
     `🔢 Cycle day: *Day ${cycleDay}*\n` +
     `🔮 Next period: *~${format(nextDate)}* (${daysLabel})\n` +
-    `📏 Avg cycle length: *${avgCycleLength} days*\n\n` +
-    `_Predictions are estimates — cycles can naturally vary._`
+    `📏 Avg cycle length: *${avgCycleLength} days*` +
+    fertileWindowLine +
+    `\n\n_Predictions are estimates — cycles can naturally vary._`
   );
 };
 
