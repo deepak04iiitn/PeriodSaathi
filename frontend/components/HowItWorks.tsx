@@ -11,7 +11,7 @@ const steps = [
     number: "01",
     Icon: MessageCircle,
     heading: "Open the bot",
-    copy: "Find @PeriodSaathi on Telegram and tap Start. No sign-up, no form to fill.",
+    copy: "Find @PeriodSaathiBot on Telegram and tap Start. No sign-up, no form to fill.",
   },
   {
     number: "02",
